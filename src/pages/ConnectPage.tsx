@@ -5,10 +5,12 @@ import { useWallet } from '../hooks/useWallet';
 export const ConnectPage: React.FC = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const wallet = useWallet();
 
   const handleConnect = async () => {
     try {
+      setIsProcessing(true);
       setError(null);
       const { authenticated } = await wallet.isAuthenticated();
       if (authenticated) {
@@ -18,6 +20,8 @@ export const ConnectPage: React.FC = () => {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -35,32 +39,36 @@ export const ConnectPage: React.FC = () => {
       {error && (
         <div style={{
           backgroundColor: '#ffebee',
-          color: '#c62828',
+          color: '#d32f2f',
           padding: '15px',
           borderRadius: '8px',
           marginBottom: '20px',
           maxWidth: '400px',
-          textAlign: 'center'
+          textAlign: 'center',
+          border: '1px solid #ffcdd2'
         }}>
-          <p>{error}</p>
+          <p style={{ margin: 0, fontWeight: '500' }}>{error}</p>
         </div>
       )}
 
       <button
         onClick={handleConnect}
+        disabled={isProcessing}
         style={{
-          backgroundColor: '#1976d2',
+          backgroundColor: isProcessing ? '#9e9e9e' : '#1565c0',
           color: 'white',
           border: 'none',
           padding: '16px 32px',
           borderRadius: '8px',
-          cursor: 'pointer',
+          cursor: isProcessing ? 'not-allowed' : 'pointer',
           fontSize: '18px',
           fontWeight: 'bold',
-          minWidth: '200px'
+          minWidth: '200px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          transition: 'all 0.2s ease'
         }}
       >
-        Connect Wallet
+        {isProcessing ? 'Connecting...' : 'Connect Wallet'}
       </button>
     </div>
   );

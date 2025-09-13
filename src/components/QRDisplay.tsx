@@ -15,9 +15,9 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ publicKey, onClose }) => {
       try {
         setLoading(true);
         const qrDataUrl = await generatePublicKeyQR(publicKey, {
-          size: 400,
+          size: 600,
           errorCorrectionLevel: 'M',
-          margin: 2
+          margin: 1
         });
         setQrCodeDataUrl(qrDataUrl);
       } catch (error) {
@@ -33,7 +33,6 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ publicKey, onClose }) => {
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(publicKey);
-      alert('Public key copied to clipboard!');
     } catch (error) {
       console.error('Failed to copy to clipboard:', error);
     }
@@ -46,14 +45,13 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ publicKey, onClose }) => {
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'white',
       zIndex: 1000,
       display: 'flex',
       flexDirection: 'column'
     }}>
       {/* Header */}
       <div style={{
-        backgroundColor: '#1976d2',
+        backgroundColor: '#1565c0',
         color: 'white',
         padding: '20px',
         display: 'flex',
@@ -68,9 +66,11 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ publicKey, onClose }) => {
             border: '2px solid white',
             color: 'white',
             padding: '8px 16px',
-            borderRadius: '4px',
+            borderRadius: '8px',
             cursor: 'pointer',
-            fontSize: '16px'
+            fontSize: '16px',
+            fontWeight: 'bold',
+            transition: 'all 0.2s ease'
           }}
         >
           Close
@@ -96,24 +96,25 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ publicKey, onClose }) => {
               marginBottom: '30px',
               textAlign: 'center'
             }}>
-              <h3>Share this QR code to receive BSV</h3>
-              <p style={{ color: '#666' }}>Others can scan this to get your public key</p>
+              <h3>Sharing Identity Key</h3>
+              <p style={{ color: '#aaa' }}>Others using this appcan scan this to get your identity public key</p>
             </div>
 
             {qrCodeDataUrl && (
               <div style={{
                 padding: '20px',
-                backgroundColor: '#f9f9f9',
+                backgroundColor: '#ffffff',
                 borderRadius: '12px',
-                textAlign: 'center'
+                textAlign: 'center',
+                border: '1px solid #e0e0e0',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}>
                 <img
                   src={qrCodeDataUrl}
                   alt="Public Key QR Code"
                   style={{
-                    maxWidth: '100%',
-                    maxHeight: '400px',
-                    border: '1px solid #ddd',
+                    width: '100%',
+                    height: 'auto',
                     borderRadius: '8px'
                   }}
                 />
@@ -122,18 +123,25 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ publicKey, onClose }) => {
 
             <div style={{
               marginTop: '30px',
-              textAlign: 'center',
-              maxWidth: '600px'
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: '10px',
+              maxWidth: '640px',
+              width: '100%'
             }}>
-              <p style={{ fontWeight: 'bold', marginBottom: '10px' }}>Public Key:</p>
               <div style={{
+                flex: 1,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
                 fontFamily: 'monospace',
-                backgroundColor: '#f5f5f5',
+                backgroundColor: '#ffffff',
                 padding: '15px',
                 borderRadius: '8px',
-                wordBreak: 'break-all',
                 fontSize: '14px',
-                border: '1px solid #ddd'
+                border: '1px solid #e0e0e0',
+                color: '#333333'
               }}>
                 {publicKey}
               </div>
@@ -141,17 +149,20 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ publicKey, onClose }) => {
               <button
                 onClick={copyToClipboard}
                 style={{
-                  backgroundColor: '#4caf50',
+                  backgroundColor: '#2e7d32',
                   color: 'white',
                   border: 'none',
-                  padding: '12px 24px',
-                  borderRadius: '4px',
+                  padding: '15px 20px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
-                  fontSize: '16px',
-                  marginTop: '15px'
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  transition: 'all 0.2s ease',
+                  flexShrink: 0
                 }}
               >
-                Copy Public Key
+                Copy
               </button>
             </div>
           </>

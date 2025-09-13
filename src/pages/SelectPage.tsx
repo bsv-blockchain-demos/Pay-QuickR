@@ -20,73 +20,50 @@ export const SelectPage: React.FC<SelectPageProps> = ({ scannedPublicKey }) => {
       <h2 style={{ marginBottom: '40px' }}>Choose Action</h2>
 
       <div style={{
-        display: 'flex',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
         gap: '20px',
-        flexWrap: 'wrap',
-        justifyContent: 'center'
+        maxWidth: '600px',
+        width: '100%'
       }}>
         <button
-          onClick={() => navigate('/send')}
+          onClick={() => navigate('/scan')}
           style={{
-            backgroundColor: '#ff5722',
+            backgroundColor: '#d32f2f',
             color: 'white',
             border: 'none',
-            padding: '20px 40px',
+            padding: '20px',
             borderRadius: '12px',
             cursor: 'pointer',
-            fontSize: '18px',
+            fontSize: '16px',
             fontWeight: 'bold',
-            minWidth: '150px',
-            minHeight: '80px'
+            minHeight: '80px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            transition: 'all 0.2s ease'
           }}
         >
           Send
-          <div style={{ fontSize: '14px', marginTop: '5px', opacity: 0.9 }}>
-            Scan QR Code
-          </div>
         </button>
 
         <button
-          onClick={() => navigate('/receive')}
+          onClick={() => navigate('/display')}
           style={{
-            backgroundColor: '#4caf50',
+            backgroundColor: '#2e7d32',
             color: 'white',
             border: 'none',
-            padding: '20px 40px',
+            padding: '20px',
             borderRadius: '12px',
             cursor: 'pointer',
-            fontSize: '18px',
+            fontSize: '16px',
             fontWeight: 'bold',
-            minWidth: '150px',
-            minHeight: '80px'
+            minHeight: '80px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            transition: 'all 0.2s ease'
           }}
         >
           Receive
-          <div style={{ fontSize: '14px', marginTop: '5px', opacity: 0.9 }}>
-            Show QR Code
-          </div>
         </button>
       </div>
-
-      {scannedPublicKey && (
-        <div style={{
-          marginTop: '40px',
-          padding: '20px',
-          backgroundColor: '#e8f5e8',
-          borderRadius: '8px',
-          maxWidth: '600px'
-        }}>
-          <p><strong>Last scanned:</strong></p>
-          <p style={{
-            fontFamily: 'monospace',
-            fontSize: '14px',
-            wordBreak: 'break-all',
-            margin: '10px 0'
-          }}>
-            {scannedPublicKey}
-          </p>
-        </div>
-      )}
     </div>
   );
 };
