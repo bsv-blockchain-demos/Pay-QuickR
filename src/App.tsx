@@ -11,10 +11,6 @@ function App() {
     setScannedPublicKey(result);
   };
 
-  const handleTransactionScan = (result: string) => {
-    alert(`Scanned Transaction: ${result}`);
-  };
-
   return (
     <div className="App">
       <Routes>
@@ -37,7 +33,7 @@ function App() {
         />
         <Route 
           path="/receive" 
-          element={<ReceivePage onScan={handleTransactionScan} />}
+          element={<ReceivePage />}
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

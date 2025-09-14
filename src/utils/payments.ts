@@ -1,4 +1,4 @@
-import { type AtomicBEEF, type InternalizeOutput, Transaction, Utils } from "@bsv/sdk";
+import { type AtomicBEEF, type InternalizeOutput, Beef, Utils } from "@bsv/sdk";
 
 
 export class Payment {
@@ -17,10 +17,12 @@ export class Payment {
         for (const output of this.outputs) {
             writer.writeVarIntNum(output.outputIndex)
             writer.write(Utils.toArray(output!.paymentRemittance!.senderIdentityKey, 'hex'))
-            writer.writeVarIntNum(output!.paymentRemittance!.derivationPrefix.length)
-            writer.write(Utils.toArray(output!.paymentRemittance!.derivationPrefix, 'base64'))
-            writer.writeVarIntNum(output!.paymentRemittance!.derivationSuffix.length)
-            writer.write(Utils.toArray(output!.paymentRemittance!.derivationSuffix, 'base64'))
+            const derivationPrefixBytes = Utils.toArray(output!.paymentRemittance!.derivationPrefix, 'base64')
+            writer.writeVarIntNum(derivationPrefixBytes.length)
+            writer.write(derivationPrefixBytes)
+            const derivationSuffixBytes = Utils.toArray(output!.paymentRemittance!.derivationSuffix, 'base64')
+            writer.writeVarIntNum(derivationSuffixBytes.length)
+            writer.write(derivationSuffixBytes)
         }
 
         return Utils.toBase64(writer.toArray())
@@ -28,8 +30,8 @@ export class Payment {
 
     static fromBase64(data: string) {
         const reader = new Utils.Reader(Utils.toArray(data, 'base64'))
-        const transaction = Transaction.fromReader(reader)
-        const tx = transaction.toAtomicBEEF()
+        const beef = Beef.fromReader(reader)
+        const tx = beef.toBinaryAtomic(beef.atomicTxid as string)
         const outputsCount = reader.readVarIntNum()
         const outputs: InternalizeOutput[] = []
         for (let i = 0; i < outputsCount; i++) {
