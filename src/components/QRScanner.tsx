@@ -177,23 +177,6 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose }) => {
             objectFit: 'cover'
           }}
         />
-
-        {/* Scanning overlay */}
-        {isScanning && (
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            color: 'white',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            padding: '20px',
-            borderRadius: '8px',
-            textAlign: 'center'
-          }}>
-            <p>Point your camera at a QR code</p>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -59,7 +59,9 @@ export const DisplayPage: React.FC = () => {
 
   return (
     <QRDisplay
-      publicKey={publicKeyHex}
+      data={publicKeyHex}
+      title="Receive"
+      description="Sharing Identity Key"
       onClose={() => navigate('/select')}
     />
   );

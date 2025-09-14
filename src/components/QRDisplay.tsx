@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { generatePublicKeyQR } from '../utils/qrCodeUtils';
 
 interface QRDisplayProps {
-  publicKey: string;
+  data: string;
+  title: string;
+  description: string;
   onClose: () => void;
 }
 
-export const QRDisplay: React.FC<QRDisplayProps> = ({ publicKey, onClose }) => {
+export const QRDisplay: React.FC<QRDisplayProps> = ({ data, title, description, onClose }) => {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -14,7 +16,7 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ publicKey, onClose }) => {
     const generateQR = async () => {
       try {
         setLoading(true);
-        const qrDataUrl = await generatePublicKeyQR(publicKey, {
+        const qrDataUrl = await generatePublicKeyQR(data, {
           size: 600,
           errorCorrectionLevel: 'M',
           margin: 1
@@ -28,11 +30,11 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ publicKey, onClose }) => {
     };
 
     generateQR();
-  }, [publicKey]);
+  }, [data]);
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(publicKey);
+      await navigator.clipboard.writeText(data);
     } catch (error) {
       console.error('Failed to copy to clipboard:', error);
     }
@@ -58,7 +60,7 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ publicKey, onClose }) => {
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
-        <h2 style={{ margin: 0 }}>Receive Payment</h2>
+        <h2 style={{ margin: 0 }}>{title}</h2>
         <button
           onClick={onClose}
           style={{
@@ -96,8 +98,7 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ publicKey, onClose }) => {
               marginBottom: '30px',
               textAlign: 'center'
             }}>
-              <h3>Sharing Identity Key</h3>
-              <p style={{ color: '#aaa' }}>Others using this appcan scan this to get your identity public key</p>
+              <p>{description}</p>
             </div>
 
             {qrCodeDataUrl && (
@@ -143,7 +144,7 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ publicKey, onClose }) => {
                 border: '1px solid #e0e0e0',
                 color: '#333333'
               }}>
-                {publicKey}
+                {data}
               </div>
 
               <button
