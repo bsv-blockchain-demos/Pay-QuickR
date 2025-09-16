@@ -8,25 +8,18 @@ import { wallet } from '../hooks/useWallet';
 import { RandomBase64 } from '../utils/cryptoUtils';
 import { Payment } from '../utils/payments';
 
-interface ScanPageProps {
-  onScan: (result: string) => void;
-  setPayment: (payment: any) => void;
-  scannedPublicKey?: string;
-}
-
-export const SendPage: React.FC<ScanPageProps> = ({ onScan, setPayment, scannedPublicKey }) => {
+export const SendPage: React.FC = () => {
   const navigate = useNavigate();
-  const [counterparty, setCounterparty] = useState<string>(scannedPublicKey || '');
+  const [counterparty, setCounterparty] = useState<string>('');
   const [satoshis, setSatoshis] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string>('');
-  const [showScanner, setShowScanner] = useState<boolean>(!scannedPublicKey);
+  const [showScanner, setShowScanner] = useState<boolean>(true);
   const [payment, setPaymentData] = useState<any>(null);
   const [qrData, setQrData] = useState<string>('');
 
   const handleScan = (result: string) => {
     setCounterparty(result);
-    onScan(result);
     setShowScanner(false);
   };
 
@@ -101,7 +94,6 @@ export const SendPage: React.FC<ScanPageProps> = ({ onScan, setPayment, scannedP
       
       setPaymentData(paymentObj);
       setQrData(pay.toBase64());
-      setPayment(paymentObj);
     } catch (err) {
       console.error('Payment creation failed:', err);
       setError('Failed to create payment transaction: ' + (err as Error).message);

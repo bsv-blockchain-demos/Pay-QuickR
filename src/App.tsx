@@ -1,30 +1,20 @@
 import { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { ConnectPage, SelectPage, SendPage, DisplayPage, ReceivePage } from './pages';
+import { ConnectPage, SelectPage, SendPage, ReceivePage } from './pages';
 import './App.css';
 
 function App() {
-  const [scannedPublicKey, setScannedPublicKey] = useState<string>('');
-  
-  const handlePublicKeyScan = (result: string) => {
-    setScannedPublicKey(result);
-  };
-
   return (
     <div className="App">
       <Routes>
         <Route path="/" element={<ConnectPage />} />
         <Route 
           path="/select" 
-          element={<SelectPage scannedPublicKey={scannedPublicKey} />} 
+          element={<SelectPage />} 
         />
         <Route 
           path="/send" 
-          element={<SendPage onScan={handlePublicKeyScan} setPayment={() => {}} scannedPublicKey={scannedPublicKey} />} 
-        />
-        <Route 
-          path="/display" 
-          element={<DisplayPage />}
+          element={<SendPage />} 
         />
         <Route 
           path="/receive" 

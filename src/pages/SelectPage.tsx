@@ -5,7 +5,7 @@ interface SelectPageProps {
   scannedPublicKey?: string;
 }
 
-export const SelectPage: React.FC<SelectPageProps> = ({ scannedPublicKey }) => {
+export const SelectPage: React.FC<SelectPageProps> = () => {
   const navigate = useNavigate();
 
   return (
@@ -46,28 +46,6 @@ export const SelectPage: React.FC<SelectPageProps> = ({ scannedPublicKey }) => {
         </button>
 
         <button
-          onClick={() => navigate('/display')}
-          style={{
-            backgroundColor: '#2e7d32',
-            color: 'white',
-            border: 'none',
-            padding: '20px',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            minHeight: '80px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          Receive
-        </button>
-
-
-
-
-        <button
           onClick={() => navigate('/receive')}
           style={{
             backgroundColor: '#2e7d32',
@@ -83,7 +61,7 @@ export const SelectPage: React.FC<SelectPageProps> = ({ scannedPublicKey }) => {
             transition: 'all 0.2s ease'
           }}
         >
-          Scan P2P
+          Receive
         </button>
       </div>
     </div>

@@ -14,7 +14,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose, scanWhat 
   const scannerRef = useRef<QrScanner | null>(null);
   const chunkCollectorRef = useRef<ChunkCollector>(new ChunkCollector());
   const [hasCamera, setHasCamera] = useState<boolean>(true);
-  const [isScanning, setIsScanning] = useState<boolean>(false);
+  const [, setIsScanning] = useState<boolean>(false);
   const [chunkProgress, setChunkProgress] = useState<{ collected: number; total: number; id: string } | null>(null);
 
   useEffect(() => {
