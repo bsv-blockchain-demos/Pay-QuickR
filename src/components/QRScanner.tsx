@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import QrScanner from 'qr-scanner';
+import { openPreferredBackCamera } from '../utils/camera';
+import { parseQRChunk, ChunkCollector } from '../utils/qrChunking';
 
 interface QRScannerProps {
   onScan: (result: string) => void;
@@ -9,28 +11,64 @@ interface QRScannerProps {
 export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerRef = useRef<QrScanner | null>(null);
+  const chunkCollectorRef = useRef<ChunkCollector>(new ChunkCollector());
   const [hasCamera, setHasCamera] = useState<boolean>(true);
   const [isScanning, setIsScanning] = useState<boolean>(false);
+  const [chunkProgress, setChunkProgress] = useState<{ collected: number; total: number; id: string } | null>(null);
 
   useEffect(() => {
     let isMounted = true;
+    let mediaStream: MediaStream | null = null;
     
     const initScanner = async () => {
       if (!videoRef.current || !isMounted) return;
 
       try {
-        const hasCamera = await QrScanner.hasCamera();
-        if (!isMounted) return;
-        
-        setHasCamera(hasCamera);
+        // Try to get the preferred back camera stream
+        mediaStream = await openPreferredBackCamera();
+        if (!isMounted) {
+          mediaStream.getTracks().forEach(track => track.stop());
+          return;
+        }
 
-        if (!hasCamera) return;
+        // Set the stream to the video element
+        videoRef.current.srcObject = mediaStream;
+        
+        setHasCamera(true);
 
         const scanner = new QrScanner(
           videoRef.current,
           (result) => {
-            if (isMounted) {
-              onScan(result.data);
+            if (!isMounted) return;
+            
+            const qrData = result.data;
+            
+            // Check if this is a chunked QR code
+            const chunk = parseQRChunk(qrData);
+            
+            if (chunk) {
+              // This is a chunked QR code
+              const completeData = chunkCollectorRef.current.addChunk(chunk);
+              
+              // Update progress
+              const progress = chunkCollectorRef.current.getProgress(chunk.id);
+              if (progress) {
+                setChunkProgress({
+                  collected: progress.collected,
+                  total: progress.total,
+                  id: chunk.id
+                });
+              }
+              
+              if (completeData) {
+                // All chunks collected, return complete data
+                onScan(completeData);
+                scanner.stop();
+              }
+              // Continue scanning for more chunks
+            } else {
+              // Regular QR code, return immediately
+              onScan(qrData);
               scanner.stop();
             }
           },
@@ -58,6 +96,9 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose }) => {
         if (isMounted) {
           setHasCamera(false);
         }
+        if (mediaStream) {
+          mediaStream.getTracks().forEach(track => track.stop());
+        }
       }
     };
 
@@ -67,6 +108,9 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose }) => {
     return () => {
       isMounted = false;
       clearTimeout(timeoutId);
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+      }
       if (scannerRef.current) {
         scannerRef.current.stop();
         scannerRef.current.destroy();
@@ -144,7 +188,27 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose }) => {
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
-        <h2 style={{ color: 'white', margin: 0 }}>Scan QR Code</h2>
+        <div>
+          <h2 style={{ color: 'white', margin: 0 }}>Scan QR Code</h2>
+          {chunkProgress && (
+            <div style={{
+              marginTop: '8px',
+              padding: '8px 12px',
+              backgroundColor: 'rgba(33, 150, 243, 0.2)',
+              borderRadius: '4px',
+              border: '1px solid #2196f3'
+            }}>
+              <p style={{ 
+                color: 'white', 
+                margin: 0, 
+                fontSize: '12px',
+                fontWeight: 'bold'
+              }}>
+                Collecting chunks: {chunkProgress.collected}/{chunkProgress.total}
+              </p>
+            </div>
+          )}
+        </div>
         <button
           onClick={handleClose}
           style={{

@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { generatePublicKeyQR } from '../utils/qrCodeUtils';
+import { chunkData, type ChunkedData } from '../utils/qrChunking';
 
 interface QRDisplayProps {
   data: string;
@@ -11,17 +12,50 @@ interface QRDisplayProps {
 export const QRDisplay: React.FC<QRDisplayProps> = ({ data, title, description, onClose }) => {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
+  const [chunkedData, setChunkedData] = useState<ChunkedData | null>(null);
+  const [currentChunkIndex, setCurrentChunkIndex] = useState<number>(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    const generateQR = async () => {
+    const initializeQR = async () => {
       try {
         setLoading(true);
-        const qrDataUrl = await generatePublicKeyQR(data, {
+        
+        // Check if data needs chunking
+        const chunks = chunkData(data);
+        setChunkedData(chunks);
+        setCurrentChunkIndex(0);
+        
+        // Generate QR for first chunk or single data
+        const initialData = chunks.isChunked ? chunks.chunks[0].data : data;
+        const qrDataUrl = await generatePublicKeyQR(initialData, {
           size: 600,
           errorCorrectionLevel: 'M',
           margin: 1
         });
         setQrCodeDataUrl(qrDataUrl);
+        
+        // Set up animation for chunked data
+        if (chunks.isChunked && chunks.chunks.length > 1) {
+          intervalRef.current = setInterval(async () => {
+            setCurrentChunkIndex(prevIndex => {
+              const nextIndex = (prevIndex + 1) % chunks.chunks.length;
+              
+              // Generate QR for next chunk
+              generatePublicKeyQR(chunks.chunks[nextIndex].data, {
+                size: 600,
+                errorCorrectionLevel: 'M',
+                margin: 1
+              }).then(qrDataUrl => {
+                setQrCodeDataUrl(qrDataUrl);
+              }).catch(error => {
+                console.error('Failed to generate QR code for chunk:', error);
+              });
+              
+              return nextIndex;
+            });
+          }, 200);
+        }
       } catch (error) {
         console.error('Failed to generate QR code:', error);
       } finally {
@@ -29,7 +63,15 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ data, title, description, 
       }
     };
 
-    generateQR();
+    initializeQR();
+    
+    // Cleanup interval on unmount or data change
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
   }, [data]);
 
   const copyToClipboard = async () => {
@@ -99,6 +141,31 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ data, title, description, 
               textAlign: 'center'
             }}>
               <p>{description}</p>
+              {chunkedData?.isChunked && (
+                <div style={{
+                  marginTop: '15px',
+                  padding: '10px',
+                  backgroundColor: '#e3f2fd',
+                  borderRadius: '8px',
+                  border: '1px solid #2196f3'
+                }}>
+                  <p style={{ 
+                    margin: '0 0 5px 0', 
+                    fontSize: '14px', 
+                    fontWeight: 'bold',
+                    color: '#1976d2'
+                  }}>
+                    Animated QR Code
+                  </p>
+                  <p style={{ 
+                    margin: 0, 
+                    fontSize: '12px',
+                    color: '#666'
+                  }}>
+                    Chunk {currentChunkIndex + 1} of {chunkedData.chunks.length}
+                  </p>
+                </div>
+              )}
             </div>
 
             {qrCodeDataUrl && (
