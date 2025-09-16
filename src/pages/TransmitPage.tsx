@@ -12,7 +12,21 @@ export const TransmitPage: React.FC<TransmitPageProps> = ({ payment }) => {
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
-    if (!payment) {
+    if (payment) {
+      const pay = new Payment({
+        tx: payment.response.tx,
+        outputs: [{
+          outputIndex: 0,
+          protocol: "wallet payment",
+          paymentRemittance: {
+            senderIdentityKey: payment.paymentData.senderIdentityKey,
+            derivationPrefix: payment.paymentData.derivationPrefix,
+            derivationSuffix: payment.paymentData.derivationSuffix
+          }
+        }]
+      })
+      setData(pay.toBase64());
+    } else {
       const payments = localStorage.getItem('outboundPayments');
       if (payments) {
         const parsedPayments = JSON.parse(payments);
@@ -89,6 +103,27 @@ export const TransmitPage: React.FC<TransmitPageProps> = ({ payment }) => {
           description="Scan this QR code to transmit transaction"
           onClose={() => navigate('/select')}
         />
+      </div>
+      <div style={{
+        padding: '20px',
+        maxWidth: '500px',
+        margin: '0 auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px'
+      }}>
+        <button
+          onClick={() => navigate('/select')}
+          style={{
+            alignSelf: 'flex-start',
+            background: 'none',
+            border: 'none',
+            fontSize: '24px',
+            cursor: 'pointer'
+          }}
+        >
+          ←
+        </button>
       </div>
     </div>
   );

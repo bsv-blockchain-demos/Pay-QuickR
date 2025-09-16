@@ -68,7 +68,10 @@ export const ScanPage: React.FC<ScanPageProps> = ({ onScan, setPayment, scannedP
           lockingScript: script.toHex(),
           outputDescription: `Payment to ${counterparty} of ${satoshiAmount} satoshis`,
           customInstructions: JSON.stringify(paymentData)
-        }]
+        }],
+        options: {
+          randomizeOutputs: false
+        }
       });
 
       const payment = { paymentData, response, timestamp: Date.now(), counterparty, satoshis: satoshiAmount };

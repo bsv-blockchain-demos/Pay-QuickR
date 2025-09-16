@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Transaction } from '@bsv/sdk';
 import { QRScanner } from '../components/QRScanner';
 import { Payment } from '../utils/payments';
 import { useNavigate } from 'react-router-dom';
@@ -19,29 +20,34 @@ export const ReceivePage: React.FC = () => {
       setVisualLog(prev => [...prev, `Scanned: ${result.substring(0, 10)}...`]);
       
       const pay = Payment.fromBase64(result);
-      setVisualLog(prev => [...prev, 'Payment parsed successfully', pay]);
+      setVisualLog(prev => [...prev, 'Payment parsed successfully']);
+
+      const transaction = Transaction.fromBEEF(pay.tx)
+      const valid = await transaction.verify()
+
+      if (!valid) {
+        setVisualLog(prev => [...prev, 'Transaction failed SPV']);
+        return;
+      }
       
-      const { accepted } = await wallet.internalizeAction({
+      const response = await wallet.internalizeAction({
         tx: pay.tx,
         outputs: pay.outputs,
         description: 'Internalize Payment from Pay-QuickR',
         labels: ['Pay-QuickR', 'inbound']
       });
 
-      if (accepted) {
+      setVisualLog(prev => [...prev, 'Response from wallet:', response]);
+
+      if (response.accepted) {
         setVisualLog(prev => [...prev, 'Payment accepted!']);
-        setTimeout(() => {
-          navigate('/select');
-        }, 2000);
       } else {
         setVisualLog(prev => [...prev, 'Payment rejected by wallet']);
       }
       
     } catch (error) {
       console.error('Failed to parse payment:', error);
-      setVisualLog(prev => [...prev, `Error: ${error instanceof Error ? error.message : 'Unknown error'}`, error]);
-    } finally {
-      // Keep processing state to show results
+      setVisualLog(prev => [...prev, JSON.stringify(error)]);
     }
   };
 
