@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { ConnectPage, SelectPage, ScanPage, DisplayPage, TransmitPage, ReceivePage } from './pages';
+import { ConnectPage, SelectPage, SendPage, DisplayPage, ReceivePage } from './pages';
 import './App.css';
 
 function App() {
   const [scannedPublicKey, setScannedPublicKey] = useState<string>('');
-  const [payment, setPayment] = useState<any>(null);
   
   const handlePublicKeyScan = (result: string) => {
     setScannedPublicKey(result);
@@ -20,16 +19,12 @@ function App() {
           element={<SelectPage scannedPublicKey={scannedPublicKey} />} 
         />
         <Route 
-          path="/scan" 
-          element={<ScanPage onScan={handlePublicKeyScan} setPayment={setPayment} scannedPublicKey={scannedPublicKey} />} 
+          path="/send" 
+          element={<SendPage onScan={handlePublicKeyScan} setPayment={() => {}} scannedPublicKey={scannedPublicKey} />} 
         />
         <Route 
           path="/display" 
           element={<DisplayPage />}
-        />
-        <Route 
-          path="/transmit" 
-          element={<TransmitPage payment={payment} />}
         />
         <Route 
           path="/receive" 

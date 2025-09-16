@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRScanner } from '../components/QRScanner';
+import { QRDisplay } from '../components/QRDisplay';
 import { PublicKey, P2PKH } from '@bsv/sdk';
 import { brc29ProtocolID } from '@bsv/wallet-toolbox-client';
 import { wallet } from '../hooks/useWallet';
 import { RandomBase64 } from '../utils/cryptoUtils';
+import { Payment } from '../utils/payments';
 
 interface ScanPageProps {
   onScan: (result: string) => void;
@@ -12,13 +14,15 @@ interface ScanPageProps {
   scannedPublicKey?: string;
 }
 
-export const ScanPage: React.FC<ScanPageProps> = ({ onScan, setPayment, scannedPublicKey }) => {
+export const SendPage: React.FC<ScanPageProps> = ({ onScan, setPayment, scannedPublicKey }) => {
   const navigate = useNavigate();
   const [counterparty, setCounterparty] = useState<string>(scannedPublicKey || '');
   const [satoshis, setSatoshis] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string>('');
   const [showScanner, setShowScanner] = useState<boolean>(!scannedPublicKey);
+  const [payment, setPaymentData] = useState<any>(null);
+  const [qrData, setQrData] = useState<string>('');
 
   const handleScan = (result: string) => {
     setCounterparty(result);
@@ -74,15 +78,30 @@ export const ScanPage: React.FC<ScanPageProps> = ({ onScan, setPayment, scannedP
         }
       });
 
-      const payment = { paymentData, response, timestamp: Date.now(), counterparty, satoshis: satoshiAmount };
+      const paymentObj = { paymentData, response, timestamp: Date.now(), counterparty, satoshis: satoshiAmount };
       
       // Save to localStorage
       const existingPayments = JSON.parse(localStorage.getItem('outboundPayments') || '[]');
-      existingPayments.push(payment);
+      existingPayments.push(paymentObj);
       localStorage.setItem('outboundPayments', JSON.stringify(existingPayments));
       
-      setPayment(payment);
-      navigate('/transmit');
+      // Create Payment object for QR display
+      const pay = new Payment({
+        tx: response.tx!,
+        outputs: [{
+          outputIndex: 0,
+          protocol: "wallet payment",
+          paymentRemittance: {
+            senderIdentityKey: paymentData.senderIdentityKey,
+            derivationPrefix: paymentData.derivationPrefix,
+            derivationSuffix: paymentData.derivationSuffix
+          }
+        }]
+      });
+      
+      setPaymentData(paymentObj);
+      setQrData(pay.toBase64());
+      setPayment(paymentObj);
     } catch (err) {
       console.error('Payment creation failed:', err);
       setError('Failed to create payment transaction: ' + (err as Error).message);
@@ -90,6 +109,78 @@ export const ScanPage: React.FC<ScanPageProps> = ({ onScan, setPayment, scannedP
       setIsProcessing(false);
     }
   };
+
+  // If payment is created, show QR display
+  if (qrData && payment) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'white',
+        zIndex: 1000,
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        {/* Header */}
+        <div style={{
+          backgroundColor: '#1976d2',
+          color: 'white',
+          padding: '20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <h2 style={{ margin: 0 }}>Payment Transaction</h2>
+          <button
+            onClick={() => {
+              setPaymentData(null);
+              setQrData('');
+              setCounterparty('');
+              setSatoshis('');
+              setShowScanner(true);
+            }}
+            style={{
+              backgroundColor: 'transparent',
+              border: '2px solid white',
+              color: 'white',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}
+          >
+            New Payment
+          </button>
+        </div>
+
+        {/* Content */}
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '40px 20px'
+        }}>
+          <QRDisplay
+            data={qrData}
+            title="Scan to Receive Payment"
+            description={`Payment of ${payment.satoshis} satoshis to ${payment.counterparty.substring(0, 20)}...`}
+            onClose={() => {
+              setPaymentData(null);
+              setQrData('');
+              setCounterparty('');
+              setSatoshis('');
+              setShowScanner(true);
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (counterparty && !showScanner) {
     return (
@@ -227,6 +318,7 @@ export const ScanPage: React.FC<ScanPageProps> = ({ onScan, setPayment, scannedP
   return (
     <QRScanner
       onScan={handleScan}
+      scanWhat="Identity Key"
       onClose={() => navigate('/select')}
     />
   );

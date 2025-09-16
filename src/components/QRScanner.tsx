@@ -6,9 +6,10 @@ import { parseQRChunk, ChunkCollector } from '../utils/qrChunking';
 interface QRScannerProps {
   onScan: (result: string) => void;
   onClose: () => void;
+  scanWhat: 'Identity Key' | 'Transaction';
 }
 
-export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose }) => {
+export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose, scanWhat }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const scannerRef = useRef<QrScanner | null>(null);
   const chunkCollectorRef = useRef<ChunkCollector>(new ChunkCollector());
@@ -189,7 +190,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose }) => {
         alignItems: 'center'
       }}>
         <div>
-          <h2 style={{ color: 'white', margin: 0 }}>Scan QR Code</h2>
+          <h2 style={{ color: 'white', margin: 0 }}>Scan {scanWhat}</h2>
           {chunkProgress && (
             <div style={{
               marginTop: '8px',

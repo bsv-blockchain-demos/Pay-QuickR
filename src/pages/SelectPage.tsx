@@ -27,7 +27,7 @@ export const SelectPage: React.FC<SelectPageProps> = ({ scannedPublicKey }) => {
         width: '100%'
       }}>
         <button
-          onClick={() => navigate('/scan')}
+          onClick={() => navigate('/send')}
           style={{
             backgroundColor: '#d32f2f',
             color: 'white',
@@ -64,24 +64,6 @@ export const SelectPage: React.FC<SelectPageProps> = ({ scannedPublicKey }) => {
           Receive
         </button>
 
-        <button
-          onClick={() => navigate('/transmit')}
-          style={{
-            backgroundColor: '#2e7d32',
-            color: 'white',
-            border: 'none',
-            padding: '20px',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            minHeight: '80px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          Transfer
-        </button>
 
 
 

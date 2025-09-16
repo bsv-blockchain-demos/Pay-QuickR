@@ -107,6 +107,7 @@ export const ReceivePage: React.FC = () => {
   return (
     <QRScanner
       onScan={handleScan}
+      scanWhat="Transaction"
       onClose={() => navigate('/select')}
     />
   );
