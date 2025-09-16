@@ -109,6 +109,7 @@ export const ReceivePage: React.FC = () => {
             setIsProcessing(false);
             setVisualLog([]);
             setShowScanner(false);
+            navigate('/select');
           }}
           style={{
             marginTop: '20px',
@@ -122,7 +123,7 @@ export const ReceivePage: React.FC = () => {
             fontWeight: 'bold'
           }}
         >
-          Back to Display
+          Done
         </button>
       </div>
     );
@@ -171,6 +172,29 @@ export const ReceivePage: React.FC = () => {
       </div>
     );
   }
+
+  const ScanTransaction = () => (
+  <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
+    <button
+      onClick={() => setShowScanner(true)}
+      style={{
+        marginTop: '30px',
+        backgroundColor: '#2e7d32',
+        color: 'white',
+        border: 'none',
+        padding: '16px 32px',
+        borderRadius: '8px',
+        cursor: 'pointer',
+        fontSize: '18px',
+        fontWeight: 'bold',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        transition: 'all 0.2s ease'
+      }}
+    >
+      Scan Transaction
+    </button>
+ </div>
+ )
 
   return (
     <div style={{
@@ -224,27 +248,8 @@ export const ReceivePage: React.FC = () => {
           title="Share Your Identity Key"
           description="Let others scan this QR code to send you payments"
           onClose={() => navigate('/select')}
+          additionalButton={<ScanTransaction />}
         />
-        
-        {/* Scan Transaction Button */}
-        <button
-          onClick={() => setShowScanner(true)}
-          style={{
-            marginTop: '30px',
-            backgroundColor: '#2e7d32',
-            color: 'white',
-            border: 'none',
-            padding: '16px 32px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '18px',
-            fontWeight: 'bold',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          Scan Transaction
-        </button>
       </div>
     </div>
   );

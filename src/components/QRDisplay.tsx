@@ -7,9 +7,10 @@ interface QRDisplayProps {
   title: string;
   description: string;
   onClose: () => void;
+  additionalButton?: React.ReactNode;
 }
 
-export const QRDisplay: React.FC<QRDisplayProps> = ({ data, title, description, onClose }) => {
+export const QRDisplay: React.FC<QRDisplayProps> = ({ data, title, description, onClose, additionalButton }) => {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [chunkedData, setChunkedData] = useState<ChunkedData | null>(null);
@@ -91,7 +92,8 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ data, title, description, 
       bottom: 0,
       zIndex: 1000,
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      overflow: 'auto'
     }}>
       {/* Header */}
       <div style={{
@@ -127,7 +129,7 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ data, title, description, 
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         padding: '40px 20px'
       }}>
         {loading ? (
@@ -235,6 +237,7 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ data, title, description, 
             </div>
           </>
         )}
+        {additionalButton}
       </div>
     </div>
   );

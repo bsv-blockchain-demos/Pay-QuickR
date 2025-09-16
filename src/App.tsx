@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ConnectPage, SelectPage, SendPage, ReceivePage } from './pages';
 import './App.css';

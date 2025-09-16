@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRScanner } from '../components/QRScanner';
 import { QRDisplay } from '../components/QRDisplay';
@@ -17,6 +17,77 @@ export const SendPage: React.FC = () => {
   const [showScanner, setShowScanner] = useState<boolean>(true);
   const [payment, setPaymentData] = useState<any>(null);
   const [qrData, setQrData] = useState<string>('');
+  const [outboundPayments, setOutboundPayments] = useState<any[]>([]);
+
+  // Load outbound payments from localStorage on component mount
+  useEffect(() => {
+    const loadOutboundPayments = () => {
+      const stored = localStorage.getItem('outboundPayments');
+      if (stored) {
+        const payments = JSON.parse(stored);
+        if (payments.length > 0) {
+          setOutboundPayments(payments);
+          // Load the first payment and show it in transmit mode
+          const firstPayment = payments[0];
+          setPaymentData(firstPayment);
+          
+          // Create Payment object for QR display
+          const pay = new Payment({
+            tx: firstPayment.response.tx,
+            outputs: [{
+              outputIndex: 0,
+              protocol: "wallet payment",
+              paymentRemittance: {
+                senderIdentityKey: firstPayment.paymentData.senderIdentityKey,
+                derivationPrefix: firstPayment.paymentData.derivationPrefix,
+                derivationSuffix: firstPayment.paymentData.derivationSuffix
+              }
+            }]
+          });
+          
+          setQrData(pay.toBase64());
+          setShowScanner(false);
+        }
+      }
+    };
+
+    loadOutboundPayments();
+  }, []);
+
+  const removeCurrentPaymentAndLoadNext = () => {
+    const updatedPayments = outboundPayments.slice(1); // Remove first payment
+    setOutboundPayments(updatedPayments);
+    localStorage.setItem('outboundPayments', JSON.stringify(updatedPayments));
+    
+    if (updatedPayments.length > 0) {
+      // Load next payment
+      const nextPayment = updatedPayments[0];
+      setPaymentData(nextPayment);
+      
+      // Create Payment object for QR display
+      const pay = new Payment({
+        tx: nextPayment.response.tx,
+        outputs: [{
+          outputIndex: 0,
+          protocol: "wallet payment",
+          paymentRemittance: {
+            senderIdentityKey: nextPayment.paymentData.senderIdentityKey,
+            derivationPrefix: nextPayment.paymentData.derivationPrefix,
+            derivationSuffix: nextPayment.paymentData.derivationSuffix
+          }
+        }]
+      });
+      
+      setQrData(pay.toBase64());
+    } else {
+      // No more payments, reset to scan mode
+      setPaymentData(null);
+      setQrData('');
+      setCounterparty('');
+      setSatoshis('');
+      setShowScanner(true);
+    }
+  };
 
   const handleScan = (result: string) => {
     setCounterparty(result);
@@ -77,6 +148,7 @@ export const SendPage: React.FC = () => {
       const existingPayments = JSON.parse(localStorage.getItem('outboundPayments') || '[]');
       existingPayments.push(paymentObj);
       localStorage.setItem('outboundPayments', JSON.stringify(existingPayments));
+      setOutboundPayments(existingPayments);
       
       // Create Payment object for QR display
       const pay = new Payment({
@@ -104,73 +176,72 @@ export const SendPage: React.FC = () => {
 
   // If payment is created, show QR display
   if (qrData && payment) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'white',
-        zIndex: 1000,
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        {/* Header */}
-        <div style={{
-          backgroundColor: '#1976d2',
+    const NextPaymentButton = () => (
+      <button
+        onClick={removeCurrentPaymentAndLoadNext}
+        style={{
+          marginTop: '20px',
+          backgroundColor: '#f44336',
+          border: 'none',
           color: 'white',
-          padding: '20px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <h2 style={{ margin: 0 }}>Payment Transaction</h2>
-          <button
-            onClick={() => {
-              setPaymentData(null);
-              setQrData('');
-              setCounterparty('');
-              setSatoshis('');
-              setShowScanner(true);
-            }}
-            style={{
-              backgroundColor: 'transparent',
-              border: '2px solid white',
-              color: 'white',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '16px'
-            }}
-          >
-            New Payment
-          </button>
-        </div>
+          padding: '12px 24px',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        }}
+      >
+        {outboundPayments.length > 1 ? 'Next Payment' : 'Clear Payment'}
+      </button>
+    );
 
-        {/* Content */}
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '40px 20px'
-        }}>
-          <QRDisplay
-            data={qrData}
-            title="Scan to Receive Payment"
-            description={`Payment of ${payment.satoshis} satoshis to ${payment.counterparty.substring(0, 20)}...`}
-            onClose={() => {
-              setPaymentData(null);
-              setQrData('');
-              setCounterparty('');
-              setSatoshis('');
-              setShowScanner(true);
-            }}
-          />
-        </div>
-      </div>
+    return (
+      <QRDisplay
+        data={qrData}
+        title="Scan Tx"
+        description={`Payment of ${payment.satoshis} satoshis to ${payment.counterparty.substring(0, 20)}...`}
+        onClose={() => {
+          setPaymentData(null);
+          setQrData('');
+          setCounterparty('');
+          setSatoshis('');
+          setShowScanner(true);
+        }}
+        additionalButton={
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {outboundPayments.length > 1 && (
+              <p style={{ margin: '10px 0 0 0', fontSize: '14px', color: '#666' }}>
+                {outboundPayments.length} payments queued
+              </p>
+            )}
+            {outboundPayments.length > 0 && <NextPaymentButton />}
+            <button
+              onClick={() => {
+                setPaymentData(null);
+                setQrData('');
+                setCounterparty('');
+                setSatoshis('');
+                setShowScanner(true);
+              }}
+              style={{
+                marginTop: '10px',
+                backgroundColor: '#1976d2',
+                border: 'none',
+                color: 'white',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}
+            >
+              New Payment
+            </button>
+          </div>
+        }
+      />
     );
   }
 
