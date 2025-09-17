@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@bsv/sdk": "^1.7.6",
+    "@bsv/wallet-toolbox-client": "^1.6.23",
     "@types/qrcode": "^1.5.5",
     "@types/react-router-dom": "^5.3.3",
     "qr-scanner": "^1.4.2",
