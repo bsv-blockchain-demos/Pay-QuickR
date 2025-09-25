@@ -113,7 +113,7 @@ export const ReceivePage: React.FC = () => {
           }}
           style={{
             marginTop: '20px',
-            backgroundColor: '#1565c0',
+            backgroundColor: '#1976d2',
             color: 'white',
             border: 'none',
             padding: '12px 24px',
@@ -154,7 +154,7 @@ export const ReceivePage: React.FC = () => {
         <button
           onClick={() => navigate('/')}
           style={{
-            backgroundColor: '#1565c0',
+            backgroundColor: '#1976d2',
             color: 'white',
             border: 'none',
             padding: '16px 32px',
@@ -174,7 +174,7 @@ export const ReceivePage: React.FC = () => {
   }
 
   const ScanTransaction = () => (
-  <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center' }}>
+  <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', width: '100%' }}>
     <button
       onClick={() => setShowScanner(true)}
       style={{
@@ -203,19 +203,19 @@ export const ReceivePage: React.FC = () => {
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'white',
       zIndex: 1000,
       display: 'flex',
       flexDirection: 'column'
     }}>
       {/* Header */}
       <div style={{
-        backgroundColor: '#1976d2',
+        backgroundColor: '#2d2d2d',
+        padding: '25px',
         color: 'white',
-        padding: '20px',
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'center',
+        zIndex: 1001
       }}>
         <h2 style={{ margin: 0 }}>Receive Payment</h2>
         <button

@@ -10,22 +10,65 @@ export const SelectPage: React.FC<SelectPageProps> = () => {
 
   return (
     <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1000,
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '60vh',
-      padding: '40px'
+      width: '100%',
+      height: '100%',
+      boxSizing: 'border-box',
+      overflow: 'hidden'
     }}>
-      <h2 style={{ marginBottom: '40px' }}>Choose Action</h2>
-
+      {/* Header */}
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-        gap: '20px',
-        maxWidth: '600px',
-        width: '100%'
+        backgroundColor: '#2d2d2d',
+        padding: '25px',
+        color: 'white',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
       }}>
+        <h2 style={{ margin: 0 }}>Choose Action</h2>
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            backgroundColor: 'transparent',
+            border: '2px solid white',
+            color: 'white',
+            padding: '8px 16px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '16px'
+          }}
+        >
+          Close
+        </button>
+      </div>
+
+      {/* Content */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px 20px',
+        width: '100%',
+        boxSizing: 'border-box',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+          gap: '20px',
+          maxWidth: '600px',
+          width: '100%',
+          boxSizing: 'border-box'
+        }}>
         <button
           onClick={() => navigate('/send')}
           style={{
@@ -63,6 +106,7 @@ export const SelectPage: React.FC<SelectPageProps> = () => {
         >
           Receive
         </button>
+        </div>
       </div>
     </div>
   );

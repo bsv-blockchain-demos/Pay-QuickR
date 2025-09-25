@@ -197,7 +197,7 @@ export const QRScanner: React.FC<QRScannerProps> = ({ onScan, onClose, scanWhat 
               padding: '8px 12px',
               backgroundColor: 'rgba(33, 150, 243, 0.2)',
               borderRadius: '4px',
-              border: '1px solid #2196f3'
+              border: '1px solid #1976d2'
             }}>
               <p style={{ 
                 color: 'white', 

@@ -10,14 +10,58 @@ interface QRDisplayProps {
   additionalButton?: React.ReactNode;
 }
 
-export const QRDisplay: React.FC<QRDisplayProps> = ({ data, title, description, onClose, additionalButton }) => {
+export const QRDisplay: React.FC<QRDisplayProps> = ({ data, additionalButton }) => {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [chunkedData, setChunkedData] = useState<ChunkedData | null>(null);
   const [currentChunkIndex, setCurrentChunkIndex] = useState<number>(0);
+  const [isGeneratingQR, setIsGeneratingQR] = useState<boolean>(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const animationRef = useRef<boolean>(false);
 
   useEffect(() => {
+    const startQRAnimation = async (chunks: ChunkedData) => {
+      let chunkIndex = 1; // Start from second chunk since first is already displayed
+      
+      const animateNextChunk = async () => {
+        if (!animationRef.current) return;
+        
+        try {
+          setIsGeneratingQR(true);
+          const currentChunk = chunks.chunks[chunkIndex];
+          
+          // Generate QR for current chunk
+          const qrDataUrl = await generatePublicKeyQR(currentChunk.data, {
+            size: 600,
+            errorCorrectionLevel: 'M',
+            margin: 1
+          });
+          
+          // Only update if animation is still active
+          if (animationRef.current) {
+            setQrCodeDataUrl(qrDataUrl);
+            setCurrentChunkIndex(chunkIndex);
+          }
+          
+          // Move to next chunk
+          chunkIndex = (chunkIndex + 1) % chunks.chunks.length;
+          
+        } catch (error) {
+          console.error('Failed to generate QR code for chunk:', error);
+        } finally {
+          setIsGeneratingQR(false);
+        }
+        
+        // Schedule next animation frame if still active
+        if (animationRef.current) {
+          intervalRef.current = setTimeout(animateNextChunk, 200); // Slightly slower for better visibility
+        }
+      };
+      
+      // Start the animation loop
+      intervalRef.current = setTimeout(animateNextChunk, 200);
+    };
+
     const initializeQR = async () => {
       try {
         setLoading(true);
@@ -38,24 +82,8 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ data, title, description, 
         
         // Set up animation for chunked data
         if (chunks.isChunked && chunks.chunks.length > 1) {
-          intervalRef.current = setInterval(async () => {
-            setCurrentChunkIndex(prevIndex => {
-              const nextIndex = (prevIndex + 1) % chunks.chunks.length;
-              
-              // Generate QR for next chunk
-              generatePublicKeyQR(chunks.chunks[nextIndex].data, {
-                size: 600,
-                errorCorrectionLevel: 'M',
-                margin: 1
-              }).then(qrDataUrl => {
-                setQrCodeDataUrl(qrDataUrl);
-              }).catch(error => {
-                console.error('Failed to generate QR code for chunk:', error);
-              });
-              
-              return nextIndex;
-            });
-          }, 200);
+          animationRef.current = true;
+          startQRAnimation(chunks);
         }
       } catch (error) {
         console.error('Failed to generate QR code:', error);
@@ -66,10 +94,11 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ data, title, description, 
 
     initializeQR();
     
-    // Cleanup interval on unmount or data change
+    // Cleanup animation on unmount or data change
     return () => {
+      animationRef.current = false;
       if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+        clearTimeout(intervalRef.current);
         intervalRef.current = null;
       }
     };
@@ -93,45 +122,18 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ data, title, description, 
       zIndex: 1000,
       display: 'flex',
       flexDirection: 'column',
-      overflow: 'auto'
+      overflow: 'none'
     }}>
-      {/* Header */}
-      <div style={{
-        backgroundColor: '#1565c0',
-        color: 'white',
-        padding: '20px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <h2 style={{ margin: 0 }}>{title}</h2>
-        <button
-          onClick={onClose}
-          style={{
-            backgroundColor: 'transparent',
-            border: '2px solid white',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          Close
-        </button>
-      </div>
-
       {/* QR Code Display */}
       <div style={{
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'flex-start',
-        padding: '40px 20px'
+        padding: '80px 20px'
       }}>
+
         {loading ? (
           <div style={{ textAlign: 'center' }}>
             <p>Generating QR code...</p>
@@ -142,14 +144,13 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ data, title, description, 
               marginBottom: '30px',
               textAlign: 'center'
             }}>
-              <p>{description}</p>
               {chunkedData?.isChunked && (
                 <div style={{
                   marginTop: '15px',
                   padding: '10px',
                   backgroundColor: '#e3f2fd',
                   borderRadius: '8px',
-                  border: '1px solid #2196f3'
+                  border: '1px solid #1976d2'
                 }}>
                   <p style={{ 
                     margin: '0 0 5px 0', 
@@ -165,6 +166,7 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ data, title, description, 
                     color: '#666'
                   }}>
                     Chunk {currentChunkIndex + 1} of {chunkedData.chunks.length}
+                    {isGeneratingQR && <span style={{ marginLeft: '8px', color: '#1976d2' }}>⟳</span>}
                   </p>
                 </div>
               )}

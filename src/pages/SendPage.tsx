@@ -86,6 +86,7 @@ export const SendPage: React.FC = () => {
       setCounterparty('');
       setSatoshis('');
       setShowScanner(true);
+      navigate('/select');
     }
   };
 
@@ -181,7 +182,7 @@ export const SendPage: React.FC = () => {
         onClick={removeCurrentPaymentAndLoadNext}
         style={{
           marginTop: '20px',
-          backgroundColor: '#f44336',
+          backgroundColor: '#d32f2f',
           border: 'none',
           color: 'white',
           padding: '12px 24px',
@@ -279,7 +280,7 @@ export const SendPage: React.FC = () => {
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ flex: 1 }}>
-              <strong style={{ color: '#1565c0' }}>Counterparty:</strong>
+              <strong style={{ color: '#1976d2' }}>Counterparty:</strong>
               <div style={{
                 fontFamily: 'monospace',
                 fontSize: '12px',
