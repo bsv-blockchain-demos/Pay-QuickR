@@ -181,7 +181,6 @@ export const SendPage: React.FC = () => {
       <button
         onClick={removeCurrentPaymentAndLoadNext}
         style={{
-          marginTop: '20px',
           backgroundColor: '#d32f2f',
           border: 'none',
           color: 'white',
@@ -209,13 +208,13 @@ export const SendPage: React.FC = () => {
           setSatoshis('');
           setShowScanner(true);
         }}
-        additionalButton={
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            {outboundPayments.length > 1 && (
-              <p style={{ margin: '10px 0 0 0', fontSize: '14px', color: '#666' }}>
+        additionalButton={<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '20px' }}>
+          {outboundPayments.length > 1 && (
+              <p style={{ margin: '10px 0', fontSize: '14px', color: '#666' }}>
                 {outboundPayments.length} payments queued
               </p>
-            )}
+          )}
+          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '20px' }}>    
             {outboundPayments.length > 0 && <NextPaymentButton />}
             <button
               onClick={() => {
@@ -226,7 +225,6 @@ export const SendPage: React.FC = () => {
                 setShowScanner(true);
               }}
               style={{
-                marginTop: '10px',
                 backgroundColor: '#1976d2',
                 border: 'none',
                 color: 'white',
@@ -241,7 +239,7 @@ export const SendPage: React.FC = () => {
               New Payment
             </button>
           </div>
-        }
+        </div>}
       />
     );
   }

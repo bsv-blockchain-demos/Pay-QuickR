@@ -142,32 +142,38 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ data, additionalButton }) 
           <>
             <div style={{
               marginBottom: '30px',
-              textAlign: 'center'
+              textAlign: 'center',
+              width: '100%'
             }}>
               {chunkedData?.isChunked && (
                 <div style={{
                   marginTop: '15px',
                   padding: '10px',
-                  backgroundColor: '#e3f2fd',
+                  backgroundColor: '#1976d2',
                   borderRadius: '8px',
-                  border: '1px solid #1976d2'
+                  border: '1px solid #1976d2',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  gap: '10px',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
                 }}>
-                  <p style={{ 
-                    margin: '0 0 5px 0', 
+                  <div style={{
                     fontSize: '14px', 
                     fontWeight: 'bold',
-                    color: '#1976d2'
+                    color: '#e3f2fd',
+                    flex: 1
                   }}>
                     Animated QR Code
-                  </p>
-                  <p style={{ 
-                    margin: 0, 
+                  </div>
+                  <div style={{ 
                     fontSize: '12px',
-                    color: '#666'
+                    color: '#e3f2fd',
+                    flex: 1
                   }}>
                     Chunk {currentChunkIndex + 1} of {chunkedData.chunks.length}
                     {isGeneratingQR && <span style={{ marginLeft: '8px', color: '#1976d2' }}>⟳</span>}
-                  </p>
+                  </div>
                 </div>
               )}
             </div>
@@ -193,7 +199,7 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ data, additionalButton }) 
               </div>
             )}
 
-            <div style={{
+            {/* <div style={{
               marginTop: '30px',
               display: 'flex',
               flexDirection: 'row',
@@ -236,7 +242,7 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ data, additionalButton }) 
               >
                 Copy
               </button>
-            </div>
+            </div> */}
           </>
         )}
         {additionalButton}
