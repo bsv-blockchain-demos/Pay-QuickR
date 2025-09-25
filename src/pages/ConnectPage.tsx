@@ -101,6 +101,16 @@ export const ConnectPage: React.FC = () => {
         {isProcessing ? 'Connecting...' : 'Connect Wallet'}
       </button>
 
+      <p style={{
+        fontSize: '0.8rem',
+        color: '#999999',
+        textAlign: 'center',
+        marginBottom: '20px'
+      }}>
+        Use at your own risk. This is alpha proof of concept software, it is provided as-is, with no warranties, no guarantees, don't transfer large amounts of value. <a href="/LICENSE.txt">License</a> for full details. 
+      </p>
+
+
       {/* How to Use Section - Moved below Connect Wallet button */}
       <div style={{
         maxWidth: '700px',
@@ -112,7 +122,6 @@ export const ConnectPage: React.FC = () => {
           color: '#ffffff',
           fontSize: '1.8rem'
         }}>How It Works</h2>
-
 
         <div style={{
           textAlign: 'center',
