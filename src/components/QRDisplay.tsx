@@ -104,13 +104,13 @@ export const QRDisplay: React.FC<QRDisplayProps> = ({ data, additionalButton }) 
     };
   }, [data]);
 
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(data);
-    } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
-    }
-  };
+  // const copyToClipboard = async () => {
+  //   try {
+  //     await navigator.clipboard.writeText(data);
+  //   } catch (error) {
+  //     console.error('Failed to copy to clipboard:', error);
+  //   }
+  // };
 
   return (
     <div style={{
