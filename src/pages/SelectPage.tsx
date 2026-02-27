@@ -1,112 +1,78 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useWallet } from '../hooks/useWallet';
+import type { AppView } from '../App';
 
 interface SelectPageProps {
-  scannedPublicKey?: string;
+  navigate: (v: AppView) => void;
 }
 
-export const SelectPage: React.FC<SelectPageProps> = () => {
-  const navigate = useNavigate();
+export const SelectPage: React.FC<SelectPageProps> = ({ navigate }) => {
+  const wallet = useWallet();
+  const [isLoadingReceive, setIsLoadingReceive] = useState(false);
+
+  const handleSend = () => {
+    navigate({ name: 'send-prompt' });
+  };
+
+  const handleReceive = async () => {
+    setIsLoadingReceive(true);
+    try {
+      const { publicKey } = await wallet.getPublicKey({ identityKey: true });
+      navigate({ name: 'receive-show-id', publicKey });
+    } catch (err) {
+      console.error('Failed to get public key:', err);
+    } finally {
+      setIsLoadingReceive(false);
+    }
+  };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1000,
-      display: 'flex',
-      flexDirection: 'column',
-      width: '100%',
-      height: '100%',
-      boxSizing: 'border-box',
-      overflow: 'hidden'
-    }}>
-      {/* Header */}
-      <div style={{
-        backgroundColor: '#2d2d2d',
-        padding: '25px',
-        color: 'white',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <h2 style={{ margin: 0 }}>Choose Action</h2>
+    <div className="page">
+      <div className="page-header">
+        <h2>Pay-QuickR</h2>
         <button
-          onClick={() => navigate('/')}
-          style={{
-            backgroundColor: 'transparent',
-            border: '2px solid white',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '16px'
-          }}
+          className="btn btn-ghost"
+          style={{ minHeight: 40, padding: '8px 16px', fontSize: 14 }}
+          onClick={() => navigate({ name: 'connect' })}
         >
-          Close
+          Disconnect
         </button>
       </div>
 
-      {/* Content */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px 20px',
-        width: '100%',
-        boxSizing: 'border-box',
-        overflow: 'hidden'
-      }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-          gap: '20px',
-          maxWidth: '600px',
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '40px 20px',
+          gap: 16,
+          maxWidth: 500,
+          margin: '0 auto',
           width: '100%',
-          boxSizing: 'border-box'
-        }}>
+        }}
+      >
+        <p style={{ color: 'var(--text-secondary)', textAlign: 'center', margin: '0 0 8px' }}>
+          What would you like to do?
+        </p>
+
         <button
-          onClick={() => navigate('/send')}
-          style={{
-            backgroundColor: '#d32f2f',
-            color: 'white',
-            border: 'none',
-            padding: '20px',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            minHeight: '80px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            transition: 'all 0.2s ease'
-          }}
+          className="btn btn-red"
+          onClick={handleSend}
+          style={{ width: '100%', fontSize: 18 }}
         >
-          Send
+          ↑ Send
         </button>
 
         <button
-          onClick={() => navigate('/receive')}
-          style={{
-            backgroundColor: '#2e7d32',
-            color: 'white',
-            border: 'none',
-            padding: '20px',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            minHeight: '80px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            transition: 'all 0.2s ease'
-          }}
+          className="btn btn-green"
+          onClick={handleReceive}
+          disabled={isLoadingReceive}
+          style={{ width: '100%', fontSize: 18 }}
         >
-          Receive
+          {isLoadingReceive ? 'Loading...' : '↓ Receive'}
         </button>
-        </div>
       </div>
     </div>
   );

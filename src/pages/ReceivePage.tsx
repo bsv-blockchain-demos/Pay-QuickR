@@ -1,255 +1,152 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Transaction } from '@bsv/sdk';
 import { QRDisplay } from '../components/QRDisplay';
 import { QRScanner } from '../components/QRScanner';
 import { Payment } from '../utils/payments';
 import { useWallet } from '../hooks/useWallet';
+import type { AppView, ReceiveView } from '../App';
 
-export const ReceivePage: React.FC = () => {
-  const navigate = useNavigate();
-  const [publicKeyHex, setPublicKeyHex] = useState<string | null>(null);
-  const [showScanner, setShowScanner] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [visualLog, setVisualLog] = useState<any[]>([]);
+interface ReceivePageProps {
+  view: ReceiveView;
+  navigate: (v: AppView) => void;
+}
+
+export const ReceivePage: React.FC<ReceivePageProps> = ({ view, navigate }) => {
+  if (view.name === 'receive-show-id')
+    return <ReceiveShowId publicKey={view.publicKey} navigate={navigate} />;
+  if (view.name === 'receive-scan-tx')
+    return <ReceiveScanTx publicKey={view.publicKey} navigate={navigate} />;
+  if (view.name === 'receive-processing')
+    return (
+      <ReceiveProcessing
+        scannedData={view.scannedData}
+        publicKey={view.publicKey}
+        navigate={navigate}
+      />
+    );
+  return null;
+};
+
+// ── Sub-views ────────────────────────────────────────────────────────────────
+
+const ReceiveShowId: React.FC<{ publicKey: string; navigate: (v: AppView) => void }> = ({
+  publicKey,
+  navigate,
+}) => (
+  <QRDisplay
+    data={publicKey}
+    title="Your Identity Key"
+    description="Let others scan this QR code to send you payments"
+    onClose={() => navigate({ name: 'home' })}
+    additionalButton={
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20, width: '100%' }}>
+        <button
+          className="btn btn-green"
+          onClick={() => navigate({ name: 'receive-scan-tx', publicKey })}
+          style={{ minWidth: 220 }}
+        >
+          Scan Transaction
+        </button>
+      </div>
+    }
+  />
+);
+
+const ReceiveScanTx: React.FC<{ publicKey: string; navigate: (v: AppView) => void }> = ({
+  publicKey,
+  navigate,
+}) => (
+  <QRScanner
+    scanWhat="Transaction"
+    onScan={(data) => navigate({ name: 'receive-processing', scannedData: data, publicKey })}
+    onClose={() => navigate({ name: 'receive-show-id', publicKey })}
+  />
+);
+
+const ReceiveProcessing: React.FC<{
+  scannedData: string;
+  publicKey: string;
+  navigate: (v: AppView) => void;
+}> = ({ scannedData, navigate }) => {
   const wallet = useWallet();
+  const [logs, setLogs] = useState<{ msg: string; type: 'ok' | 'err' | 'info' }[]>([]);
+  const [done, setDone] = useState(false);
+
+  const addLog = (msg: string, type: 'ok' | 'err' | 'info' = 'info') =>
+    setLogs((prev) => [...prev, { msg, type }]);
 
   useEffect(() => {
-    const loadPublicKey = async () => {
+    const process = async () => {
       try {
-        const isAuth = await wallet.isAuthenticated();
-        if (isAuth) {
-          const { publicKey } = await wallet.getPublicKey({ identityKey: true });
-          setPublicKeyHex(publicKey);
+        addLog(`Scanned: ${scannedData.substring(0, 12)}...`);
+
+        const pay = Payment.fromBase64(scannedData);
+        addLog('Payment parsed successfully', 'ok');
+
+        const transaction = Transaction.fromBEEF(pay.tx);
+        const valid = await transaction.verify();
+
+        if (!valid) {
+          addLog('Transaction failed SPV verification', 'err');
+          setDone(true);
+          return;
+        }
+        addLog('SPV verification passed', 'ok');
+
+        const response = await wallet.internalizeAction({
+          tx: pay.tx,
+          outputs: pay.outputs,
+          description: 'Internalize Payment from Pay-QuickR',
+          labels: ['Pay-QuickR', 'inbound'],
+        });
+
+        if (response.accepted) {
+          addLog('Payment accepted!', 'ok');
+        } else {
+          addLog('Payment rejected by wallet', 'err');
         }
       } catch (error) {
-        console.error('Failed to load public key:', error);
+        addLog(`Error: ${JSON.stringify(error)}`, 'err');
+      } finally {
+        setDone(true);
       }
     };
 
-    loadPublicKey();
-  }, []);
-
-  const handleScan = async (result: string) => {
-    console.log('QR Scan result:', result);
-    setIsProcessing(true);
-    
-    try {
-      setVisualLog(prev => [...prev, `Scanned: ${result.substring(0, 10)}...`]);
-      
-      const pay = Payment.fromBase64(result);
-      setVisualLog(prev => [...prev, 'Payment parsed successfully']);
-
-      const transaction = Transaction.fromBEEF(pay.tx)
-      const valid = await transaction.verify()
-
-      if (!valid) {
-        setVisualLog(prev => [...prev, 'Transaction failed SPV']);
-        return;
-      }
-      
-      const response = await wallet.internalizeAction({
-        tx: pay.tx,
-        outputs: pay.outputs,
-        description: 'Internalize Payment from Pay-QuickR',
-        labels: ['Pay-QuickR', 'inbound']
-      });
-
-      setVisualLog(prev => [...prev, 'Response from wallet:', response]);
-
-      if (response.accepted) {
-        setVisualLog(prev => [...prev, 'Payment accepted!']);
-      } else {
-        setVisualLog(prev => [...prev, 'Payment rejected by wallet']);
-      }
-      
-    } catch (error) {
-      console.error('Failed to parse payment:', error);
-      setVisualLog(prev => [...prev, JSON.stringify(error)]);
-    }
-  };
-
-  // Show processing screen when scanning transaction
-  if (isProcessing) {
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '60vh',
-        padding: '40px'
-      }}>
-        <h2 style={{ marginBottom: '40px'}}>Processing Payment...</h2>
-        <div style={{
-          backgroundColor: '#f5f5f5',
-          padding: '20px',
-          borderRadius: '8px',
-          maxWidth: '600px',
-          width: '100%',
-          maxHeight: '400px',
-          overflow: 'auto'
-        }}>
-          {visualLog.map((log, index) => (
-            <div key={index} style={{
-              marginBottom: '10px',
-              padding: '8px',
-              backgroundColor: typeof log === 'string' && log.startsWith('Error:') ? '#ffebee' : '#e8f5e8',
-              borderRadius: '4px',
-              fontSize: '14px',
-              fontFamily: typeof log === 'object' ? 'monospace' : 'inherit',
-              color: 'black'
-            }}>
-              {typeof log === 'object' ? JSON.stringify(log, null, 2) : log}
-            </div>
-          ))}
-        </div>
-        <button
-          onClick={() => {
-            setIsProcessing(false);
-            setVisualLog([]);
-            setShowScanner(false);
-            navigate('/select');
-          }}
-          style={{
-            marginTop: '20px',
-            backgroundColor: '#1976d2',
-            color: 'white',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold'
-          }}
-        >
-          Done
-        </button>
-      </div>
-    );
-  }
-
-  // Show transaction scanner
-  if (showScanner) {
-    return (
-      <QRScanner
-        onScan={handleScan}
-        scanWhat="Transaction"
-        onClose={() => setShowScanner(false)}
-      />
-    );
-  }
-
-  if (!publicKeyHex) {
-    return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '60vh',
-        padding: '40px'
-      }}>
-        <p>No wallet connected. Please connect your wallet first.</p>
-        <button
-          onClick={() => navigate('/')}
-          style={{
-            backgroundColor: '#1976d2',
-            color: 'white',
-            border: 'none',
-            padding: '16px 32px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            marginTop: '20px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          Go to Connect
-        </button>
-      </div>
-    );
-  }
-
-  const ScanTransaction = () => (
-  <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', width: '100%' }}>
-    <button
-      onClick={() => setShowScanner(true)}
-      style={{
-        marginTop: '30px',
-        backgroundColor: '#2e7d32',
-        color: 'white',
-        border: 'none',
-        padding: '16px 32px',
-        borderRadius: '8px',
-        cursor: 'pointer',
-        fontSize: '18px',
-        fontWeight: 'bold',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        transition: 'all 0.2s ease'
-      }}
-    >
-      Scan Transaction
-    </button>
- </div>
- )
+    process();
+  }, []); // intentionally run once on mount
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1000,
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
-      {/* Header */}
-      <div style={{
-        backgroundColor: '#2d2d2d',
-        padding: '25px',
-        color: 'white',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        zIndex: 1001
-      }}>
-        <h2 style={{ margin: 0 }}>Receive Payment</h2>
-        <button
-          onClick={() => navigate('/select')}
-          style={{
-            backgroundColor: 'transparent',
-            border: '2px solid white',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '16px'
-          }}
-        >
-          Close
-        </button>
-      </div>
+    <div
+      className="page"
+      style={{ alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}
+    >
+      <div className="glass-card" style={{ maxWidth: 560, width: '100%', padding: '32px 28px' }}>
+        <h2 style={{ margin: '0 0 24px', color: 'var(--text-primary)', fontSize: '1.3rem' }}>
+          {done ? 'Processing Complete' : 'Processing Payment...'}
+        </h2>
 
-      {/* Content */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '40px 20px'
-      }}>
-        <QRDisplay
-          data={publicKeyHex}
-          title="Share Your Identity Key"
-          description="Let others scan this QR code to send you payments"
-          onClose={() => navigate('/select')}
-          additionalButton={<ScanTransaction />}
-        />
+        <div style={{ maxHeight: 340, overflowY: 'auto', marginBottom: 24 }}>
+          {logs.map((log, i) => (
+            <div key={i} className={`log-entry ${log.type}`}>
+              {log.msg}
+            </div>
+          ))}
+          {!done && (
+            <div className="log-entry info" style={{ opacity: 0.6 }}>
+              Working...
+            </div>
+          )}
+        </div>
+
+        {done && (
+          <button
+            className="btn btn-primary"
+            style={{ width: '100%' }}
+            onClick={() => navigate({ name: 'home' })}
+          >
+            Done
+          </button>
+        )}
       </div>
     </div>
   );
