@@ -75,4 +75,4 @@ The active flow is selected in [src/App.tsx](src/App.tsx). Older example files a
 
 ## Licence
 
-The repository includes the Apache 2.0 licence in [LICENSE.md](LICENSE.md), with a browser-served copy in [public/LICENSE.txt](public/LICENSE.txt).
+**Apache 2.0 licence.** See [LICENSE.md](LICENSE.md) for the full terms. A browser-served copy is available in [public/LICENSE.txt](public/LICENSE.txt).
